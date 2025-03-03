@@ -1,40 +1,204 @@
-import { RpcProvider } from "starknet";
-import { isSmartWallet, isKnownAccount, KNOWN_ACCOUNTS } from "./index";
+import { RpcProvider, hash } from "starknet";
 
-// async function checkAddress(address: string) {
-//   try {
-//     const isWallet = await isSmartWallet(address);
-//     console.log(`\nChecking address: ${address}`);
-//     console.log(`Is smart wallet? ${isWallet ? "YES" : "NO"}`);
+export interface CheckWalletOptions {
+  network?: "mainnet-alpha" | "sepolia-alpha" | "custom";
+  nodeUrl?: string;
+  provider?: RpcProvider;
+}
 
-//     if (isWallet) {
-//       const provider = new RpcProvider({
-//         nodeUrl: "https://starknet-mainnet.public.blastapi.io",
-//       });
-//       const classHash = await provider.getClassHashAt(address);
+const DEFAULT_RPCS: Record<string, string> = {
+  "mainnet-alpha": "https://starknet-mainnet.g.alchemy.com/v2/YOUR_API_KEY",
+  "sepolia-alpha": "https://free-rpc.nethermind.io/sepolia-juno",
+};
 
-//       if (isKnownAccount(classHash)) {
-//         const accountType = Object.entries(KNOWN_ACCOUNTS).find(
-//           ([, hash]) => hash === classHash
-//         )?.[0];
-//         console.log(`Detected wallet type: ${accountType}`);
-//       }
-//     }
-//   } catch (error: any) {
-//     console.error(`Error checking address ${address}: ${error.message}`);
-//   }
-// }
+async function retryOperation<T>(
+  operation: () => Promise<T>,
+  retries: number = 3
+): Promise<T> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise((res) => setTimeout(res, 1000 * (i + 1)));
+    }
+  }
+  throw new Error("Max retries reached");
+}
 
-// // Test addresses
-// const TEST_ADDRESSES = [
-//   //   "0x0554b4a27e6ba1e00a01deebdf486c9c0e7bffc5074f67dfbb79bbf011162a62", // Argent
-//   "0x01729ce1AD61551F08A1A5d4A8a0d3753de028b26b229FF021Ad8a9D3c1c29C9",
-//   "0x024d1e3556f7c6a7f6a0c6679323e1a157b0e4e9605e3a0f7e59e91e8daf7d3", // OpenZeppelin
-//   "0x000000000000000000000000000000000000000000000000000000000000dead", // Invalid
-// ];
+export async function isSmartWallet(
+  address: string,
+  options: CheckWalletOptions = {}
+): Promise<boolean> {
+  const nodeUrl =
+    options.nodeUrl || DEFAULT_RPCS[options.network || "sepolia-alpha"];
 
-// (async () => {
-//   for (const address of TEST_ADDRESSES) {
-//     await checkAddress(address);
-//   }
-// })();
+  if (!nodeUrl) {
+    throw new Error("Invalid network or missing nodeUrl");
+  }
+
+  const provider = options.provider || new RpcProvider({ nodeUrl });
+
+  try {
+    const classHash = await retryOperation(() =>
+      provider.getClassHashAt(address)
+    );
+
+    if (!classHash || !classHash.startsWith("0x")) {
+      console.log("Invalid or missing class hash");
+      return false;
+    }
+
+    const contractClass = await retryOperation(() =>
+      provider.getClassByHash(classHash)
+    );
+
+    if (!contractClass?.entry_points_by_type?.EXTERNAL) {
+      console.log("❌ No external entry points, not a wallet");
+      return false;
+    }
+
+    const externalEntryPoints = contractClass.entry_points_by_type.EXTERNAL.map(
+      (entry) => entry.selector
+    );
+
+    const requiredSelectors = ["__execute__", "__validate__"].map((name) =>
+      hash.getSelectorFromName(name)
+    );
+
+    return requiredSelectors.every((selector) =>
+      externalEntryPoints.includes(selector)
+    );
+  } catch (error) {
+    console.error(
+      "Check failed:",
+      error instanceof Error ? error.message : error
+    );
+    return false;
+  }
+}
+
+export async function isSmartContract(
+  address: string,
+  options: CheckWalletOptions = {}
+): Promise<boolean> {
+  const nodeUrl =
+    options.nodeUrl || DEFAULT_RPCS[options.network || "sepolia-alpha"];
+
+  if (!nodeUrl) {
+    throw new Error("Invalid network or missing nodeUrl");
+  }
+
+  const provider = options.provider || new RpcProvider({ nodeUrl });
+
+  try {
+    const classHash = await retryOperation(() =>
+      provider.getClassHashAt(address)
+    );
+
+    if (!classHash || !classHash.startsWith("0x")) {
+      console.log("Invalid or missing class hash");
+      return false;
+    }
+
+    const contractClass = await retryOperation(() =>
+      provider.getClassByHash(classHash)
+    );
+
+    if (!contractClass?.entry_points_by_type?.EXTERNAL) {
+      console.log("❌ No external entry points, not a wallet");
+      return false;
+    }
+
+    const externalEntryPoints = contractClass.entry_points_by_type.EXTERNAL.map(
+      (entry) => entry.selector
+    );
+
+    const requiredSelectors = ["__execute__", "__validate__"].map((name) =>
+      hash.getSelectorFromName(name)
+    );
+
+    return requiredSelectors.every(
+      (selector) => !externalEntryPoints.includes(selector)
+    );
+  } catch (error) {
+    console.error(
+      "Check failed:",
+      error instanceof Error ? error.message : error
+    );
+    return false;
+  }
+}
+
+export async function checkAddress(
+  address: string,
+  options: CheckWalletOptions = {}
+): Promise<boolean> {
+  const nodeUrl =
+    options.nodeUrl || DEFAULT_RPCS[options.network || "mainnet-alpha"];
+
+  if (!nodeUrl) {
+    throw new Error("Invalid network or missing nodeUrl");
+  }
+
+  const provider = new RpcProvider({ nodeUrl });
+
+  try {
+    console.log(`\n🔍 Checking ${address}`);
+
+    if (!/^0x0[0-9a-fA-F]{63}$/.test(address)) {
+      console.log("❌ Invalid address format");
+      return false;
+    }
+
+    const classHash = await provider.getClassHashAt(address);
+    console.log("Class hash:", classHash || "Not found");
+
+    if (!classHash) {
+      console.log("❌ No contract at this address");
+      return false;
+    }
+
+    const isWallet = await isSmartWallet(address, { provider });
+
+    if (isWallet) {
+      console.log(`🛡️ Is Smart Wallet: ✅ Yes`);
+
+      console.log(isWallet && "You are interacting with a smart-wallet");
+    } else {
+      console.log(`🛡️ Is Smart Wallet: ❌ No`);
+      const isContract = await isSmartContract(address, { provider });
+      console.log(`🛡️ Is Smart Contract: ${isContract ? "✅ Yes" : "❌ No"}`);
+      isContract && console.log("You are interacting with a smart-contract");
+    }
+
+    return true;
+  } catch (error) {
+    console.error(
+      "❌ Check failed:",
+      error instanceof Error ? error.message : error
+    );
+    return false;
+  }
+}
+
+export function isValidStarknetAddress(address: string): [boolean, string] {
+  const re = /^0x[0-9a-fA-F]{64}$/;
+
+  if (re.test(address)) {
+    return [true, address];
+  }
+
+  if (address.length === 65 && address.startsWith("0x")) {
+    const withoutPrefix = address.slice(2);
+
+    if (/^[0-9a-fA-F]+$/.test(withoutPrefix)) {
+      const fixedAddress = `0x0${withoutPrefix}`;
+      if (re.test(fixedAddress)) {
+        return [true, fixedAddress];
+      }
+    }
+  }
+
+  return [false, address];
+}
