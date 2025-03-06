@@ -1,5 +1,5 @@
 {
-  "name": "starknet-wallet-checker",
+  "name": "starknet-address-checker",
   "version": "1.0.0",
   "description": "A library to check if a Starknet address is a smart wallet, smart contract, or invalid. This also solves the issue of inconsistent address length.",
   "main": "dist/index.js",
