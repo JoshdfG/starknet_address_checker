@@ -7,13 +7,14 @@ export interface CheckWalletOptions {
 }
 
 export interface CheckResult {
-  isValid: boolean;
-  isWallet: boolean;
-  isContract: boolean;
+  isValidAddress: boolean;
+  isSmartWallet: boolean;
+  isSmartContract: boolean;
   message: string;
 }
 const DEFAULT_RPCS: Record<string, string> = {
-  "mainnet-alpha": "https://starknet-mainnet.g.alchemy.com/v2/YOUR_API_KEY",
+  "mainnet-alpha":
+    "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/v0_7/OEXJ9TcADB3MesS1_JuEc-UXQ_rBMsPR",
   "sepolia-alpha": "https://free-rpc.nethermind.io/sepolia-juno",
 };
 
@@ -150,9 +151,9 @@ export async function checkAddress(
   const provider = options.provider || new RpcProvider({ nodeUrl });
 
   const response: CheckResult = {
-    isValid: false,
-    isWallet: false,
-    isContract: false,
+    isValidAddress: false,
+    isSmartWallet: false,
+    isSmartContract: false,
     message: "",
   };
 
@@ -175,16 +176,16 @@ export async function checkAddress(
     const isWallet = await isSmartWallet(address, { provider });
 
     if (isWallet) {
-      response.isValid = true;
-      response.isWallet = true;
+      response.isValidAddress = true;
+      response.isSmartWallet = true;
       response.message =
         "🛡️ Is Smart Wallet: ✅ Yes\nYou are interacting with a smart-wallet";
     } else {
       const isContract = await isSmartContract(address, { provider });
 
       if (isContract) {
-        response.isValid = true;
-        response.isContract = true;
+        response.isValidAddress = true;
+        response.isSmartContract = true;
         response.message =
           "🛡️ Is Smart Wallet: ❌ No\n🛡️ Is Smart Contract: ✅ Yes\nYou are interacting with a smart-contract";
       } else {

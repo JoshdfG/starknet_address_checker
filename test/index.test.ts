@@ -17,8 +17,8 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: BRAVOS_TEST_RPC,
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.isWallet).toBe(true);
+    expect(result.isValidAddress).toBe(true);
+    expect(result.isSmartWallet).toBe(true);
   }, 10000);
 
   it("should detect smart wallet on Mainnet", async () => {
@@ -29,8 +29,8 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: DEFAULT_RPCS["mainnet"],
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.isWallet).toBe(true);
+    expect(result.isValidAddress).toBe(true);
+    expect(result.isSmartWallet).toBe(true);
   }, 10000);
 
   it("should fail if smart wallet is not deployed on Mainnet", async () => {
@@ -41,8 +41,8 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: DEFAULT_RPCS["mainnet"],
     });
 
-    expect(result.isValid).toBe(false);
-    expect(result.isWallet).toBe(false);
+    expect(result.isValidAddress).toBe(false);
+    expect(result.isSmartWallet).toBe(false);
   }, 10000);
 
   it("should detect contract address on testnet", async () => {
@@ -52,8 +52,8 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: BRAVOS_TEST_RPC,
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.isContract).toBe(true);
+    expect(result.isValidAddress).toBe(true);
+    expect(result.isSmartContract).toBe(true);
   });
 
   it("should detect contract address on mainnet", async () => {
@@ -63,8 +63,8 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: DEFAULT_RPCS["mainnet"],
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.isContract).toBe(true);
+    expect(result.isValidAddress).toBe(true);
+    expect(result.isSmartContract).toBe(true);
   });
 
   it("should handle invalid addresses", async () => {
@@ -72,7 +72,7 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: DEFAULT_RPCS["sepolia"],
     });
 
-    expect(result.isValid).toBe(false);
+    expect(result.isValidAddress).toBe(false);
     expect(result.message).toContain("Invalid address format");
   });
 
@@ -83,7 +83,7 @@ describe("Starknet Wallet Checker", () => {
       nodeUrl: BRAVOS_TEST_RPC,
     });
 
-    expect(result.isValid).toBe(false);
+    expect(result.isValidAddress).toBe(false);
     expect(result.message).toContain("No contract at this address");
   }, 10000);
 });
