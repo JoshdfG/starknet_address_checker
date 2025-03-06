@@ -3,3 +3,6 @@ test/
 tsconfig.json
 node_modules/
 *.log
+jest.config.js
+.babelrc
+.gitignore
