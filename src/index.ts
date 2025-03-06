@@ -181,7 +181,7 @@ export async function checkAddress(
       response.message = [
         "🛡️ Is Smart Wallet: ✅ Yes",
         "You are interacting with a smart-wallet",
-      ].join("\n");
+      ].join(",");
     } else {
       const isContract = await isSmartContract(address, { provider });
 
@@ -192,13 +192,13 @@ export async function checkAddress(
           "🛡️ Is Smart Wallet: ❌ No",
           "🛡️ Is Smart Contract: ✅ Yes",
           "You are interacting with a smart-contract",
-        ].join("\n");
+        ].join(",");
       } else {
         response.message = [
           "🛡️ Is Smart Wallet: ❌ No",
           "🛡️ Is Smart Contract: ❌ No",
           "This address is not a smart wallet or smart contract",
-        ].join("\n");
+        ].join(",");
       }
     }
 
