@@ -1,14 +1,30 @@
 {
   "name": "starknet-wallet-checker",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "A library to check if a Starknet address is a smart wallet, smart contract, or invalid. This also solves the issue of inconsistent address length.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "build": "tsc",
+    "test": "jest",
+    "prepublish": "npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "starknet",
+    "address",
+    "wallet",
+    "contract",
+    "checker"
+  ],
+  "author": "Joshua Agboola agboolajoshua161@gmail.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoshdfG/starknet_address_checker"
+  },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "starknet": "^5.24.5"
   },
