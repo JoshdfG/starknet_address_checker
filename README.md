@@ -26,7 +26,8 @@ Example:
 ```typescript
 import { checkAddress } from "starknet-wallet-checker";
 
-const address = "0x123..."; // Replace with a Starknet address
+const address =
+  "0x06eC96291A904b8B62B446FB32fC9903b5f82D73D7CA319E03ba45D50788Ec30";
 const result = await checkAddress(address);
 
 console.log(result);
@@ -63,11 +64,12 @@ Example:
 ```typescript
 import { isValidStarknetAddress } from "starknet-wallet-checker";
 
-const address = "0x123..."; // Replace with a Starknet address
+const address =
+  "0x06eC96291A904b8B62B446FB32fC9903b5f82D73D7CA319E03ba45D50788Ec30";
 const [isValid, fixedAddress] = isValidStarknetAddress(address);
 
 console.log(`Is valid: ${isValid}`); // true or false
-console.log(`Fixed address: ${fixedAddress}`); // Returns the fixed address if applicable
+console.log(`Fixed address: ${fixedAddress}`); // Returns the fixed address the provided address one bit lesser and if the address length is valid it returns it as it is.
 ```
 
 Output
