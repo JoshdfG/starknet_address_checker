@@ -178,22 +178,31 @@ export async function checkAddress(
     if (isWallet) {
       response.isValidAddress = true;
       response.isSmartWallet = true;
-      response.message =
-        "🛡️ Is Smart Wallet: ✅ Yes\nYou are interacting with a smart-wallet";
+      response.message = [
+        "🛡️ Is Smart Wallet: ✅ Yes",
+        "You are interacting with a smart-wallet",
+      ].join("\n");
     } else {
       const isContract = await isSmartContract(address, { provider });
 
       if (isContract) {
         response.isValidAddress = true;
         response.isSmartContract = true;
-        response.message =
-          "🛡️ Is Smart Wallet: ❌ No\n🛡️ Is Smart Contract: ✅ Yes\nYou are interacting with a smart-contract";
+        response.message = [
+          "🛡️ Is Smart Wallet: ❌ No",
+          "🛡️ Is Smart Contract: ✅ Yes",
+          "You are interacting with a smart-contract",
+        ].join("\n");
       } else {
-        response.message =
-          "🛡️ Is Smart Wallet: ❌ No\n🛡️ Is Smart Contract: ❌ No\nThis address is not a smart wallet or smart contract";
+        response.message = [
+          "🛡️ Is Smart Wallet: ❌ No",
+          "🛡️ Is Smart Contract: ❌ No",
+          "This address is not a smart wallet or smart contract",
+        ].join("\n");
       }
     }
 
+    console.log(response.message);
     return response;
   } catch (error) {
     console.error(
@@ -201,17 +210,12 @@ export async function checkAddress(
       error instanceof Error ? error.message : error
     );
 
-    if (
-      error instanceof Error &&
-      error.message.includes("Contract not found")
-    ) {
-      response.message = "❌ No contract at this address";
-    } else {
-      response.message = `❌ Check failed: ${
-        error instanceof Error ? error.message : error
-      }`;
-    }
+    response.message =
+      error instanceof Error && error.message.includes("Contract not found")
+        ? "❌ No contract at this address"
+        : `❌ Check failed: ${error instanceof Error ? error.message : error}`;
 
+    console.log(response.message);
     return response;
   }
 }
